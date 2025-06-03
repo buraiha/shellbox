@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -euo pipefail
 
 CMD_IMAGE="shellbox_{{CMD_NAME}}"
