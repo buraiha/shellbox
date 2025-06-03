@@ -26,16 +26,25 @@ install_command() {
 
     mkdir -p "$CMD_DIR"
 
+    # Dockerfile生成
     cat > "$CMD_DIR/Dockerfile" <<EOF
 FROM $IMAGE
 ENTRYPOINT ["$CMD"]
 EOF
 
+    # コンテナビルド
     podman build -t "shellbox_$CMD" "$CMD_DIR"
 
+    # 実行スクリプト生成
     cat > "$SCRIPT_PATH" <<EOF
 #!/bin/bash
-podman run --rm -v "\$PWD":/mnt shellbox_$CMD /mnt "\$@"
+CMD_IMAGE="shellbox_$CMD"
+
+if ! podman run --rm -v "\$PWD":/mnt "\$CMD_IMAGE" /mnt "\$@"; then
+    echo "❌ ShellBox 実行エラー: ディレクトリのマウントに失敗した可能性があります。" >&2
+    echo "💡 macOS環境では \$HOME 配下で実行してください。" >&2
+    exit 1
+fi
 EOF
 
     chmod +x "$SCRIPT_PATH"
@@ -48,7 +57,7 @@ uninstall_shellbox() {
         bash "$UNINSTALL_SCRIPT"
     else
         echo "⚠ uninstall.sh が見つかりません: $UNINSTALL_SCRIPT"
-        echo "手動で /usr/local/shellbox を削除してください。"
+        echo "手動で $SHELLBOX_HOME を削除してください。"
     fi
 }
 
