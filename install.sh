@@ -48,8 +48,11 @@ if [[ "$SHELL" == */zsh ]]; then
 fi
 
 if ! grep -q "$BIN_DIR" "$SHELL_RC"; then
+    echo "# Added by ShellBox installer on $(date)" >> "$SHELL_RC"
     echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$SHELL_RC"
-    echo "✅ PATH に $BIN_DIR を $SHELL_RC に追加しました（次回ログイン以降有効）"
+    echo "✅ $SHELL_RC に PATH の設定を追加しました。"
+    echo "   すぐに反映させるには: source \"$SHELL_RC\""
+    echo "   または、シェルを再起動／再ログインしてください。"
 fi
 
 # 初期化コマンド実行
