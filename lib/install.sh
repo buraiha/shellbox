@@ -9,6 +9,7 @@ SCRIPT_PATH="$BIN_DIR/shellbox"
 SCRIPT_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/bin/shellbox"
 UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/uninstall.sh"
 TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/runsh_template.sh"
+MOUNTS_TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/mounts_template.conf"
 VERSION_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/VERSION"
 VERSION="$(curl -sSL "$VERSION_URL")"
 
@@ -40,6 +41,9 @@ chmod +x "$LIB_DIR/uninstall.sh"
 
 curl -sSL "$TEMPLATE_URL" -o "$LIB_DIR/runsh_template.sh"
 chmod +x "$LIB_DIR/runsh_template.sh"
+
+curl -sSL "$MOUNTS_TEMPLATE_URL" -o "$LIB_DIR/mounts_template.conf"
+chmod 644 "$LIB_DIR/mounts_template.conf"
 
 # PATH 設定（zsh or bash）
 SHELL_RC="$HOME/.bashrc"
