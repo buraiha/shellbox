@@ -16,5 +16,5 @@ fi
 
 podman run --rm \
     -v "$PWD":/mnt \
-    "${EXTRA_MOUNTS[@]}" \
+    ${EXTRA_MOUNTS+"${EXTRA_MOUNTS[@]}"} \
     "$CMD_IMAGE" "$@"
