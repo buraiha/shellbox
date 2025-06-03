@@ -48,7 +48,6 @@ if [[ "$SHELL" == */zsh ]]; then
 fi
 
 if ! grep -q "$BIN_DIR" "$SHELL_RC"; then
-    echo "# Added by ShellBox installer on $(date)" >> "$SHELL_RC"
     echo "export PATH=\"$BIN_DIR:\$PATH\"" >> "$SHELL_RC"
     echo "✅ $SHELL_RC に PATH の設定を追加しました。"
     echo "   すぐに反映させるには: source \"$SHELL_RC\""
