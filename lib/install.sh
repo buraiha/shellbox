@@ -57,5 +57,8 @@ fi
 # ShellBox 初期化
 "$SCRIPT_PATH" init
 
+# バージョンファイル保存
+curl -sSL "$VERSION_URL" -o "$SHELLBOX_HOME/VERSION"
+
 echo "🎉 ShellBox のインストールが完了しました！"
 echo "📦 アンインストールしたい場合は: $SCRIPT_PATH uninstall"
