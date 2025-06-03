@@ -4,7 +4,7 @@ set -euo pipefail
 SHELLBOX_HOME="/usr/local/shellbox"
 BIN_DIR="$SHELLBOX_HOME/bin"
 
-echo "⚠ ShellBox をアンインストールします..."
+echo "⚠ ShellBox をアンインストールします...(必要に応じて、suのパスワードを聞かれる場合があります)"
 
 read -p "本当に削除してよろしいですか？ [$SHELLBOX_HOME] (y/N): " ans
 if [[ "$ans" =~ ^[Yy]$ ]]; then

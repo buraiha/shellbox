@@ -9,6 +9,8 @@ SCRIPT_PATH="$BIN_DIR/shellbox"
 SCRIPT_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/bin/shellbox"
 UNINSTALL_PATH="$LIB_DIR/uninstall.sh"
 UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/uninstall.sh"
+VERSION_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/VERSION"
+VERSION="$(curl -sSL "$VERSION_URL")"
 
 # --force 対応
 if [[ "${1:-}" == "--force" ]]; then
@@ -23,7 +25,7 @@ if [ -f "$SCRIPT_PATH" ]; then
     exit 0
 fi
 
-echo "🛠 ShellBox セットアップを開始します..."
+echo "🛠 ShellBox $VERSION のセットアップを開始します...(必要に応じて、suのパスワードを聞かれる場合があります)"
 
 # ディレクトリ作成と権限
 sudo mkdir -p "$BIN_DIR" "$LIB_DIR"

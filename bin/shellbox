@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 SHELLBOX_HOME="/usr/local/shellbox"
 BIN_DIR="$SHELLBOX_HOME/bin"
@@ -6,6 +7,7 @@ LOG_DIR="$SHELLBOX_HOME/log"
 CONTAINERS_DIR="$SHELLBOX_HOME/containers"
 UNINSTALL_SCRIPT="$SHELLBOX_HOME/lib/uninstall.sh"
 DEFAULT_IMAGE="gcr.io/distroless/base-debian12:debug-nonroot"
+VERSION_FILE="/usr/local/shellbox/VERSION"
 
 # 初期化
 init_shellbox() {
@@ -63,6 +65,14 @@ uninstall_shellbox() {
 
 # メイン処理
 case "${1:-}" in
+    --version|-v)
+        if [[ -f "$VERSION_FILE" ]]; then
+            cat "$VERSION_FILE"
+        else
+            echo "バージョン情報が見つかりません"
+        fi
+        exit 0
+        ;;
     init)
         init_shellbox
         ;;
@@ -77,7 +87,7 @@ case "${1:-}" in
         uninstall_shellbox
         ;;
     *)
-        echo "Usage: shellbox {init|install|uninstall}"
+        echo "Usage: shellbox [init|install|uninstall|--version]"
         exit 1
         ;;
 esac
