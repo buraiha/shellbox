@@ -83,27 +83,11 @@ list_commands() {
     find "$BIN_DIR" -type f -exec basename {} \; | sort
 }
 
-view_image() {
-    local CMD="$1"
-    grep -Po '(?<=--rm\s)[^ ]+' "$BIN_DIR/$CMD" || echo "❌ イメージ情報が取得できません。"
-}
-
-pull_image() {
-    local CMD="$1"
-    local IMAGE=$(grep -Po '(?<=--rm\s)[^ ]+' "$BIN_DIR/$CMD")
-    [[ -n "$IMAGE" ]] && podman pull "$IMAGE" || echo "❌ イメージが見つかりません。"
-}
-
 remove_command() {
     local CMD="$1"
     rm -f "$BIN_DIR/$CMD"
     rm -rf "$CONTAINERS_DIR/$CMD"
     echo "🗑️ '$CMD' を削除しました。"
-}
-
-dry_run() {
-    local CMD="$1"
-    grep podman "$BIN_DIR/$CMD" || echo "❌ dry-run 情報が取得できません。"
 }
 
 show_paths() {
@@ -116,7 +100,7 @@ show_paths() {
 
 # メイン処理
 case "${1:-}" in
-    --version|-v)
+    --version)
         [[ -f "$VERSION_FILE" ]] && cat "$VERSION_FILE" || echo "バージョン情報が見つかりません"
         ;;
     init) init_shellbox ;;
@@ -140,13 +124,10 @@ case "${1:-}" in
     uninstall) uninstall_shellbox ;;
     -e) edit_command "$2" ;;
     -l) list_commands ;;
-    -v) view_image "$2" ;;
-    -i) pull_image "$2" ;;
     -r) remove_command "$2" ;;
-    -t) dry_run "$2" ;;
     --path) show_paths ;;
     *)
-        echo "Usage: shellbox [init|install|uninstall|--version|-e <cmd>|-l|-v <cmd>|-i <cmd>|-r <cmd>|-t <cmd>|--path]"
+        echo "Usage: shellbox [init|install|uninstall|--version|-e <cmd>|-l|-r <cmd>|--path]"
         exit 1
         ;;
 esac

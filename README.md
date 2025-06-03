@@ -115,27 +115,32 @@ curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/install.sh
 curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/install.sh | bash -s -- --force
 ```
 
-### `shellbox` スクリプトの基本機能
+## 🧪 ShellBoxコマンドの基本機能
 
-- `init`：ShellBoxの初期ディレクトリ構成を作成
-- `install <cmd> [image]`：ShellBoxコマンドを登録
-- `uninstall <cmd>`：ShellBoxコマンドを削除
-- `list`：インストール済みShellBoxコマンド一覧表示
+`shellbox` は、ShellBox環境全体を管理するためのCLIツールです。以下のような機能を提供しています。
 
-### 使用例
+| コマンド                                                 | 説明                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------- |
+| `shellbox init`                                      | ShellBoxの基本ディレクトリ構成を初期化します（`bin`, `log`, `containers` などを作成）。 |
+| `shellbox install \<name\> \<entrypoint\> [image] [-f \| --force]`                                                    | 指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します。<br> `image` を省略した場合は `gcr.io/distroless/base-debian12:debug-nonroot` が使用されます。<br> `--force` を指定すると ENTRYPOINT 存在チェックをスキップします。 <br>※デフォルトのコンテナイメージはdistrolessを使っており、lsやcutなどのコマンドはbusyboxに含まれるため、ENTRYPOINT存在チェックで存在を検知できません。そういったコマンドを使用するときには`--force`してください。|
+| `shellbox uninstall`                                 | ShellBox本体を削除するためのスクリプト（`lib/uninstall.sh`）を呼び出します。           |
+| `shellbox -e <name>`                                 | 指定したShellBoxスクリプトを `$EDITOR` または `vi` で開きます。                  |
+| `shellbox -l`                                        | インストール済みのShellBoxコマンド一覧を表示します。                                |
+| `shellbox -r <name>`                                 | 指定したコマンドに関連するスクリプトとDockerfileを削除します。                          |
+| `shellbox --path`                                    | ShellBoxが使用している構成ディレクトリのパスを一覧表示します。                           |
+| `shellbox --version`                                 | ShellBoxのバージョン（`/usr/local/shellbox/VERSION`）を表示します。          |
 
-```sh
-# 例: shellbox init
-/usr/local/bin/shellbox init
+---
 
-# 例: shellbox install ls gcr.io/distroless/base-debian12:debug-nonroot
-/usr/local/bin/shellbox install ls
+## 🧭 /mnt = ShellBoxにおける論理的な作業ディレクトリ
 
-# 例: shellbox ls /mnt
-shellbox_ls .
-```
+ShellBoxでは、ホスト上の作業ディレクトリ（例：`$PWD`）を原則として `/mnt` にマウントします。
 
-`shellbox install` を実行すると、`/usr/local/shellbox/bin` に実行スクリプトが生成され、PATHを通しておけばどこからでも利用可能になります。
+これは単なる技術的都合ではなく、**ShellBoxにおける「論理的な作業ディレクトリ」**という思想的な位置づけです。
+
+- ホスト環境を一切汚さない
+- 明示的なマウントにより操作対象を限定する
+- `/mnt` を前提に設計することで、スクリプトの移植性が高まる
 
 ---
 
@@ -145,7 +150,7 @@ ShellBoxは、`/usr/local/shellbox/bin/runsh_template.sh` をテンプレート�
 
 原則として、ShellBoxスクリプトは引数 `$@` を一切加工せず、そのままコンテナの `podman run` に透過的に渡します。これにより、幅広いコマンドに対応できる汎用的な仕組みを実現しています。
 
-ただし、以下のような「特殊な引数構造」や「入出力の制約」があるコマンドについては、必要に応じてテンプレートスクリプト（`runsh_template.sh`）あるいは、`shellbox install` によって作成された ShellBoxスクリプトをカスタマイズして対応してください。
+ただし、以下のような「特殊な引数構造」や「入出力の制約」があるコマンドについては、必要に応じてテンプレートスクリプト（`runsh_template.sh`）あるいは、`shellbox install` によって`/usr/local/shellbox/bin`に作成されるShellBoxスクリプトをカスタマイズして対応してください。
 
 ---
 
@@ -185,9 +190,7 @@ fi
 
 TTYが必要な場合（対話的コマンド）には、`-it` に変更してください。
 
----
-
-### 🔧 カスタマイズ例（TTY付き）
+#### 🔧 カスタマイズ例（TTY付き）
 
 ```sh
 #!/bin/sh
