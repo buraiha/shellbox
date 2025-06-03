@@ -44,7 +44,7 @@ ShellBoxは、特定のコマンドをコンテナ内で実行可能にするカ
 
 ## おすすめコンテナランタイム
 
-podmanをおすすめします。Dockerでもよいですが、podmanのほうが好きだからです。ロゴにもセルキーが入っている手前もありますし。
+podmanをおすすめします。Dockerでもよいですが、podmanのほうが好きだからです。ロゴにもpodmanのセルキーが入っている手前もありますし。
 
 podmanのほうがrootlessで動かせるので、セキュリティ的にも安心です(今日びのDockerでもできますけどね)。とくにこの仕組みのは細かいツールをたくさんコンテナ化する形になるので、変なことをしてrm -rf なんぞをしてしまっても安心。
 
@@ -67,39 +67,6 @@ debugタグのイメージでないと、busiboxが入っていないので、ca
 ---
 
 ## Dockerfileの例
-
-### 基本コマンド（例: `ls`）
-
-```Dockerfile
-FROM gcr.io/distroless/base-debian12:debug-nonroot
-ENTRYPOINT ["ls"]
-```
-
-```sh
-podman build -t shellbox_ls .
-podman run --rm -v "$PWD":/mnt shellbox_ls /mnt
-```
-
-### Pythonスクリプト実行例
-
-```Dockerfile
-FROM gcr.io/distroless/python3-debian12:debug-nonroot
-ENTRYPOINT ["python3"]
-```
-
-```python
-# test_script.py
-print("Hello, ShellBox!")
-```
-
-```sh
-podman build -t shellbox_python .
-podman run --rm -v "$PWD":/mnt shellbox_python /mnt/test_script.py
-```
-
----
-
-# Dockerfileの例
 
 ### 基本コマンド（例: `ls`）
 
@@ -169,6 +136,76 @@ shellbox_ls .
 ```
 
 `shellbox install` を実行すると、`/usr/local/shellbox/bin` に実行スクリプトが生成され、PATHを通しておけばどこからでも利用可能になります。
+
+---
+
+## 🧰 カスタムテンプレートの考え方
+
+ShellBoxは、`/usr/local/shellbox/bin/runsh_template.sh` をテンプレートとして使用し、各コマンドに応じたコンテナの実行スクリプト（**ShellBoxスクリプト**）を生成します。
+
+原則として、ShellBoxスクリプトは引数 `$@` を一切加工せず、そのままコンテナの `podman run` に透過的に渡します。これにより、幅広いコマンドに対応できる汎用的な仕組みを実現しています。
+
+ただし、以下のような「特殊な引数構造」や「入出力の制約」があるコマンドについては、必要に応じてテンプレートスクリプト（`runsh_template.sh`）あるいは、`shellbox install` によって作成された ShellBoxスクリプトをカスタマイズして対応してください。
+
+---
+
+### 🔸 カスタマイズが有効なケース
+
+| コマンド例 | 特殊な事情 |
+|------------|----------------|
+| `jq` | 標準入力が必要。`echo ... \| jq` のような形をとるため、Podmanに `-i` オプションを付与して stdin を有効にする必要がある。 |
+| `openssl req -new` | 対話的入力が発生するため、`-it` を付けて pseudo-TTY を有効にする必要がある。 |
+| `convert input.png output.jpg` | 明示的にファイルを参照するため、ホスト側ファイルが `/mnt/` にあることを前提としてShellBoxスクリプトを調整する必要がある。 |
+
+---
+
+### 💡 標準入力（stdin）についての注意
+
+ShellBoxスクリプトのデフォルトでは、Podmanに `-i`（標準入力を有効にする）オプションを**付けていません**。  
+そのため、以下のような「標準入力を使うコマンド」は、そのままでは正しく動作しない可能性があります。
+
+#### 例：
+
+```sh
+# ❌ デフォルトのShellBoxスクリプトでは反応しない例
+echo '{"foo": 1}' | my_jq '.foo'
+```
+
+このような場合は、ShellBoxスクリプトを以下のようにカスタマイズしてください：
+
+```sh
+#!/bin/sh
+CMD_IMAGE="{{CMD_IMAGE}}"
+
+if ! podman run --rm -i -v "$PWD":/mnt "$CMD_IMAGE" "$@"; then
+    echo "❌ 実行エラー: stdinを使う処理で失敗しました。" >&2
+    exit 1
+fi
+```
+
+TTYが必要な場合（対話的コマンド）には、`-it` に変更してください。
+
+---
+
+### 🔧 カスタマイズ例（TTY付き）
+
+```sh
+#!/bin/sh
+CMD_IMAGE="{{CMD_IMAGE}}"
+
+if ! podman run --rm -it -v "$PWD":/mnt "$CMD_IMAGE" "$@"; then
+    echo "❌ 実行エラー: TTYが必要な処理で失敗しました。" >&2
+    exit 1
+fi
+```
+
+---
+
+### 📌 運用ルールの提案
+
+- 一般的なコマンド（`ls`, `python`, `grep` など）は、そのままのShellBoxスクリプトで `$@` を透過させるだけで動作します。
+- 特殊な入出力要件がある場合は、各ShellBoxスクリプトやコンテナイメージ（DockerfileやENTRYPOINT）で柔軟に対応してください。
+- **ShellBox本体は引数や入出力の意味を解釈しません。コマンドごとの責任分離と再利用性を重視しています。**
 
 ---
 
