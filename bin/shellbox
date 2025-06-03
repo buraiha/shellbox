@@ -109,6 +109,25 @@ show_paths() {
     echo "  LIB_DIR:         $LIB_DIR"
 }
 
+edit_mounts() {
+    local CMD_NAME="$1"
+    local MOUNTS_PATH="$CONTAINERS_DIR/$CMD_NAME/mounts.conf"
+    local TEMPLATE="$LIB_DIR/mounts_template.conf"
+
+    if [[ ! -d "$CONTAINERS_DIR/$CMD_NAME" ]]; then
+        echo "❌ '$CMD_NAME' はまだインストールされていません。"
+        return 1
+    fi
+
+    if [[ ! -f "$MOUNTS_PATH" && -f "$TEMPLATE" ]]; then
+        cp "$TEMPLATE" "$MOUNTS_PATH"
+        echo "📄 mounts.conf をテンプレートから作成しました。"
+    fi
+
+    local EDITOR_CMD="${EDITOR:-vi}"
+    $EDITOR_CMD "$MOUNTS_PATH"
+}
+
 # メイン処理
 case "${1:-}" in
     --version)
@@ -131,6 +150,10 @@ case "${1:-}" in
         else
             install_command "$2" "$3" "${4:-$DEFAULT_IMAGE}" "$FORCE_FLAG"
         fi
+        ;;
+    edit-mounts)
+        shift
+        edit_mounts "$@"
         ;;
     uninstall) uninstall_shellbox ;;
     -e) edit_command "$2" ;;

@@ -1,8 +1,20 @@
 #!/bin/sh
-CMD_IMAGE="{{CMD_IMAGE}}"
+set -euo pipefail
 
-if ! podman run --rm -v "$PWD":/mnt "$CMD_IMAGE" "$@"; then
-    echo "❌ ShellBox 実行エラー: ディレクトリのマウントに失敗した可能性があります。" >&2
-    echo "💡 macOS環境では \$HOME 配下で実行してください。" >&2
-    exit 1
+CMD_IMAGE="shellbox_{{CMD_NAME}}"
+
+# 追加マウント定義ファイル (存在すれば使用)
+EXTRA_MOUNTS_FILE="/usr/local/shellbox/containers/{{CMD_NAME}}/mounts.conf"
+EXTRA_MOUNTS=()
+
+if [[ -f "$EXTRA_MOUNTS_FILE" ]]; then
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        EXTRA_MOUNTS+=("-v" "$line")
+    done < "$EXTRA_MOUNTS_FILE"
 fi
+
+podman run --rm \
+    -v "$PWD":/mnt \
+    "${EXTRA_MOUNTS[@]}" \
+    "$CMD_IMAGE" "$@"
