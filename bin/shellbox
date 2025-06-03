@@ -28,6 +28,9 @@ install_command() {
     local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
     local CMD_IMAGE="shellbox_$CMD_NAME"
 
+    local MOUNTS_TEMPLATE="$LIB_DIR/mounts_template.conf"
+    local MOUNTS_CONF_PATH="$CMD_DIR/mounts.conf"
+
     echo "Installing command: $CMD_NAME"
     echo "Using base image: $IMAGE"
     echo "Container ENTRYPOINT: $ENTRYPOINT_CMD"
@@ -58,6 +61,14 @@ EOF
 
     sed "s|{{CMD_IMAGE}}|$CMD_IMAGE|g" "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
+
+    # mounts.conf のテンプレートをコピー
+    if [[ -f "$MOUNTS_TEMPLATE" ]]; then
+        cp "$MOUNTS_TEMPLATE" "$MOUNTS_CONF_PATH"
+        echo "🪵 mounts.conf を作成しました: $MOUNTS_CONF_PATH"
+    else
+        echo "⚠️  mounts_template.conf が見つかりません: $MOUNTS_TEMPLATE"
+    fi
 
     echo "✅ コマンド '$CMD_NAME' をインストールしました。"
 }

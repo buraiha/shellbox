@@ -144,6 +144,22 @@ ShellBoxでは、ホスト上の作業ディレクトリ（例：`$PWD`）を原
 
 ---
 
+## 🧩 追加マウントの定義（mounts.conf）
+
+ShellBoxでは、特定のコマンドに対して追加のマウントを行いたい場合、
+`/usr/local/shellbox/containers/<コマンド名>/mounts.conf` を編集してください。
+
+- `-v` オプション形式`ローカルDir:コンテナDir`で記述（1行につき1マウント）
+- コメント行（`#`）と空行は無視されます
+- 例:
+
+```text
+/home/takashi/.ssh:/root/.ssh:ro
+/tmp/output:/out
+```
+
+---
+
 ## 🧰 カスタムテンプレートの考え方
 
 ShellBoxは、`/usr/local/shellbox/bin/runsh_template.sh` をテンプレートとして使用し、各コマンドに応じたコンテナの実行スクリプト（**ShellBoxスクリプト**）を生成します。
