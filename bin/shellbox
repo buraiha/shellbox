@@ -59,7 +59,9 @@ EOF
         return 1
     fi
 
-    sed "s|{{CMD_IMAGE}}|$CMD_IMAGE|g" "$TEMPLATE_PATH" > "$SCRIPT_PATH"
+    sed -e "s|{{CMD_IMAGE}}|$CMD_IMAGE|g" \
+        -e "s|{{CMD_NAME}}|$CMD_NAME|g" \
+        "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
 
     # mounts.conf のテンプレートをコピー
