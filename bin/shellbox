@@ -5,9 +5,11 @@ SHELLBOX_HOME="/usr/local/shellbox"
 BIN_DIR="$SHELLBOX_HOME/bin"
 LOG_DIR="$SHELLBOX_HOME/log"
 CONTAINERS_DIR="$SHELLBOX_HOME/containers"
-UNINSTALL_SCRIPT="$SHELLBOX_HOME/lib/uninstall.sh"
+LIB_DIR="$SHELLBOX_HOME/lib"
+TEMPLATE_PATH="$LIB_DIR/runsh_template.sh"
+UNINSTALL_SCRIPT="$LIB_DIR/uninstall.sh"
 DEFAULT_IMAGE="gcr.io/distroless/base-debian12:debug-nonroot"
-VERSION_FILE="/usr/local/shellbox/VERSION"
+VERSION_FILE="$SHELLBOX_HOME/VERSION"
 
 # 初期化
 init_shellbox() {
@@ -16,41 +18,52 @@ init_shellbox() {
     echo "✅ ディレクトリ構成を初期化しました。"
 }
 
-# コマンドインストール
 install_command() {
-    local CMD="$1"
-    local IMAGE="${2:-$DEFAULT_IMAGE}"
-    local CMD_DIR="$CONTAINERS_DIR/$CMD"
-    local SCRIPT_PATH="$BIN_DIR/$CMD"
+    local CMD_NAME="$1"
+    local ENTRYPOINT_CMD="$2"
+    local IMAGE="$3"
+    local FORCE="${4:-}"
 
-    echo "Installing command: $CMD"
+    local CMD_DIR="$CONTAINERS_DIR/$CMD_NAME"
+    local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
+    local CMD_IMAGE="shellbox_$CMD_NAME"
+
+    echo "Installing command: $CMD_NAME"
     echo "Using base image: $IMAGE"
+    echo "Container ENTRYPOINT: $ENTRYPOINT_CMD"
+
+    # 事前チェック（force指定時はスキップ）
+    if [[ "$FORCE" != "force" ]]; then
+        if ! podman run --rm "$IMAGE" sh -c "command -v $ENTRYPOINT_CMD" > /dev/null 2>&1; then
+            echo "❌ エラー: イメージ '$IMAGE' にコマンド '$ENTRYPOINT_CMD' が存在しません。"
+            echo "💡 busyboxなどで明示的に続行するには: shellbox install ... --force"
+            return 1
+        fi
+    else
+        echo "⚠ --force 指定により ENTRYPOINT 存在チェックをスキップしました。"
+    fi
 
     mkdir -p "$CMD_DIR"
 
     # Dockerfile生成
     cat > "$CMD_DIR/Dockerfile" <<EOF
 FROM $IMAGE
-ENTRYPOINT ["$CMD"]
+ENTRYPOINT ["$ENTRYPOINT_CMD"]
 EOF
 
     # コンテナビルド
-    podman build -t "shellbox_$CMD" "$CMD_DIR"
+    podman build -t "$CMD_IMAGE" "$CMD_DIR"
 
-    # 実行スクリプト生成
-    cat > "$SCRIPT_PATH" <<EOF
-#!/bin/bash
-CMD_IMAGE="shellbox_$CMD"
+    # テンプレートから実行スクリプト生成
+    if [[ ! -f "$TEMPLATE_PATH" ]]; then
+        echo "❌ エラー: 実行スクリプトテンプレートが見つかりません: $TEMPLATE_PATH"
+        return 1
+    fi
 
-if ! podman run --rm -v "\$PWD":/mnt "\$CMD_IMAGE" /mnt "\$@"; then
-    echo "❌ ShellBox 実行エラー: ディレクトリのマウントに失敗した可能性があります。" >&2
-    echo "💡 macOS環境では \$HOME 配下で実行してください。" >&2
-    exit 1
-fi
-EOF
-
+    sed "s|{{CMD_IMAGE}}|$CMD_IMAGE|g" "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
-    echo "✅ コマンド '$CMD' をインストールしました。"
+
+    echo "✅ コマンド '$CMD_NAME' をインストールしました。"
 }
 
 # アンインストール
@@ -77,11 +90,23 @@ case "${1:-}" in
         init_shellbox
         ;;
     install)
-        if [ -z "${2:-}" ]; then
-            echo "Usage: shellbox install {command_name} [base_container_image]"
+        if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+            echo "Usage: shellbox install <command_name> <entrypoint_cmd> [base_image] (optional)"
+            echo "       Add -f or --force to skip entrypoint existence check"
             exit 1
         fi
-        install_command "$2" "${3:-}"
+
+        FORCE_FLAG=""
+
+        if [[ "${4:-}" == "-f" || "${4:-}" == "--force" ]]; then
+            FORCE_FLAG="force"
+            install_command "$2" "$3" "$DEFAULT_IMAGE" "$FORCE_FLAG"
+        elif [[ "${5:-}" == "-f" || "${5:-}" == "--force" ]]; then
+            FORCE_FLAG="force"
+            install_command "$2" "$3" "$4" "$FORCE_FLAG"
+        else
+            install_command "$2" "$3" "${4:-$DEFAULT_IMAGE}" "$FORCE_FLAG"
+        fi
         ;;
     uninstall)
         uninstall_shellbox

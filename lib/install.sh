@@ -1,14 +1,14 @@
 #!/bin/bash
-
 set -euo pipefail
 
 SHELLBOX_HOME="/usr/local/shellbox"
 BIN_DIR="$SHELLBOX_HOME/bin"
 LIB_DIR="$SHELLBOX_HOME/lib"
 SCRIPT_PATH="$BIN_DIR/shellbox"
+
 SCRIPT_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/bin/shellbox"
-UNINSTALL_PATH="$LIB_DIR/uninstall.sh"
-UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/uninstall.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/uninstall.sh"
+TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/runsh_template.sh"
 VERSION_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/VERSION"
 VERSION="$(curl -sSL "$VERSION_URL")"
 
@@ -25,23 +25,23 @@ if [ -f "$SCRIPT_PATH" ]; then
     exit 0
 fi
 
-echo "🛠 ShellBox $VERSION のセットアップを開始します...(必要に応じて、suのパスワードを聞かれる場合があります)"
+echo "🛠 ShellBox $VERSION のセットアップを開始します..."
 
-# ディレクトリ作成と権限
+# ディレクトリ作成
 sudo mkdir -p "$BIN_DIR" "$LIB_DIR"
 sudo chown -R "$(whoami)" "$SHELLBOX_HOME"
 
-# shellbox スクリプトの設置
+# スクリプト設置
 curl -sSL "$SCRIPT_URL" -o "$SCRIPT_PATH"
 chmod +x "$SCRIPT_PATH"
-sudo chown "$(whoami)" "$SCRIPT_PATH"
 
-# uninstall.sh の設置
-curl -sSL "$UNINSTALL_URL" -o "$UNINSTALL_PATH"
-chmod +x "$UNINSTALL_PATH"
-sudo chown "$(whoami)" "$UNINSTALL_PATH"
+curl -sSL "$UNINSTALL_URL" -o "$LIB_DIR/uninstall.sh"
+chmod +x "$LIB_DIR/uninstall.sh"
 
-# 利用中のシェルに応じて .bashrc or .zshrc に PATH を追記
+curl -sSL "$TEMPLATE_URL" -o "$LIB_DIR/runsh_template.sh"
+chmod +x "$LIB_DIR/runsh_template.sh"
+
+# PATH 設定（zsh or bash）
 SHELL_RC="$HOME/.bashrc"
 if [[ "$SHELL" == */zsh ]]; then
     SHELL_RC="$HOME/.zshrc"
@@ -55,7 +55,7 @@ if ! grep -q "$BIN_DIR" "$SHELL_RC"; then
     echo "   または、シェルを再起動／再ログインしてください。"
 fi
 
-# 初期化コマンド実行
+# ShellBox 初期化
 "$SCRIPT_PATH" init
 
 echo "🎉 ShellBox のインストールが完了しました！"
