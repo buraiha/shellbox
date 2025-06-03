@@ -1,0 +1,69 @@
+#!/bin/bash
+
+SHELLBOX_HOME="/usr/local/shellbox"
+BIN_DIR="$SHELLBOX_HOME/bin"
+LOG_DIR="$SHELLBOX_HOME/log"
+CONTAINERS_DIR="$SHELLBOX_HOME/containers"
+DEFAULT_IMAGE="gcr.io/distroless/base-debian12:debug-nonroot"
+
+# 初期化処理
+init_shellbox() {
+    echo "Initializing ShellBox..."
+
+    mkdir -p "$BIN_DIR" "$LOG_DIR" "$CONTAINERS_DIR"
+
+    echo "ShellBox directories created:"
+    echo "  BIN_DIR: $BIN_DIR"
+    echo "  LOG_DIR: $LOG_DIR"
+    echo "  CONTAINERS_DIR: $CONTAINERS_DIR"
+}
+
+# install処理
+install_command() {
+    local CMD="$1"
+    local IMAGE="${2:-$DEFAULT_IMAGE}"
+    local CMD_DIR="$CONTAINERS_DIR/$CMD"
+    local SCRIPT_PATH="$BIN_DIR/$CMD"
+
+    echo "Installing command: $CMD"
+    echo "Using base image: $IMAGE"
+
+    mkdir -p "$CMD_DIR"
+
+    # Dockerfile生成
+    cat > "$CMD_DIR/Dockerfile" <<EOF
+FROM $IMAGE
+ENTRYPOINT ["$CMD"]
+EOF
+
+    # コンテナビルド
+    podman build -t "shellbox_$CMD" "$CMD_DIR"
+
+    # 実行スクリプト作成
+    cat > "$SCRIPT_PATH" <<EOF
+#!/bin/bash
+podman run --rm -v "\$PWD":/mnt shellbox_$CMD /mnt "\$@"
+EOF
+
+    chmod +x "$SCRIPT_PATH"
+
+    echo "Command '$CMD' installed. You can now run '$CMD' anywhere (once PATH is set)."
+}
+
+# メイン処理
+case "$1" in
+    init)
+        init_shellbox
+        ;;
+    install)
+        if [ -z "$2" ]; then
+            echo "Usage: shellbox install {command_name} [base_container_image]"
+            exit 1
+        fi
+        install_command "$2" "$3"
+        ;;
+    *)
+        echo "Usage: shellbox {init|install}"
+        exit 1
+        ;;
+esac
