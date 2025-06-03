@@ -1,3 +1,5 @@
+> 🌍 English version available: [README.en.md](./README.en.md)
+
 # ShellBoxについて
 
 ![ShellBox_Logo](./ShellBox_Logo_Title.png)
