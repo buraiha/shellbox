@@ -8,7 +8,7 @@ LIB_DIR="$SHELLBOX_HOME/lib"
 SCRIPT_PATH="$BIN_DIR/shellbox"
 SCRIPT_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/bin/shellbox"
 UNINSTALL_PATH="$LIB_DIR/uninstall.sh"
-UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/bin/uninstall.sh"
+UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/uninstall.sh"
 
 # --force 対応
 if [[ "${1:-}" == "--force" ]]; then
