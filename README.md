@@ -100,8 +100,17 @@ podman build -t shellbox_python .
 podman run --rm -v $PWD:/mnt shellbox_python /mnt/test_script.py
 ```
 
-## 今後の展開
+## ShellBoxの使い方
 
-- /usr/local/shellbox/bin の中に実行スクリプトを配備し、そのスクリプトから podman run するような仕組みを作る。
-  - そのスクリプトをPATHに通しておくことで、どこからでも実行できるようにする。
-- 上のように/usr/local/shellbox/bin の中に、作成したShellBoxコマンドを自動で格納するしくみ(install)を作成する。
+上記、基本的なShellBoxの仕組みをハンズオン形式で説明したものです。
+
+環境設定ツールとして、ShellBoxを使うことを前提に、各種ツールのインストールや設定を行うことができます。
+
+### ShellBoxのインストール
+
+ShellBoxは、以下のコマンドでインストールできます。
+
+```sh
+curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/install.sh | bash
+```
+
