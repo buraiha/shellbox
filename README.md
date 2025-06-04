@@ -50,19 +50,20 @@ podmanのほうがrootlessで動かせるので、セキュリティ的にも安
 
 ---
 
-## おすすめBase Image
+### デフォルトのBase Imageについて
 
-distrolessがイメージ容量が小さいのでおすすめ。
+ShellBoxでは、実用性と潔癖性のバランスを考慮し、distrolessを推奨しており
+`gcr.io/distroless/base-debian12:debug-nonroot` をデフォルトのベースイメージとしています。
 
-debugタグのイメージでないと、busiboxが入っていないので、catやlsなどのコマンドが使えない。軽量ゆえに、不要なものは入っていません。
+これは `ls` や `cat` などの最低限のユーティリティを含みつつ、
 
-その他、java入りやpython入りのイメージもあるので、使い勝手が良いやつを使うとよいです。
+- root権限なし（nonroot）
+- 最小限のパッケージ
+- セキュリティ高め
 
-[distroless利用できるイメージ一覧](https://github.com/GoogleContainerTools/distroless?tab=readme-ov-file#what-images-are-available)
+という特性を持ち、ShellBoxの思想にもっとも近い実行環境であると考えています。
 
-タグはrootでもnonrootどちらでも良いですが、nonrootのほうがセキュリティ高めです。
-
-インストール用スクリプトも、podmanを前提にして作成しています。Dockerを使う場合は、適宜書き替えてください。
+[distrolessで利用できるイメージ一覧](https://github.com/GoogleContainerTools/distroless?tab=readme-ov-file#what-images-are-available)
 
 ---
 
@@ -226,6 +227,10 @@ fi
 - 特殊な入出力要件がある場合は、各ShellBoxスクリプトやコンテナイメージ（DockerfileやENTRYPOINT）で柔軟に対応してください。
 - **ShellBox本体は引数や入出力の意味を解釈しません。コマンドごとの責任分離と再利用性を重視しています。**
 
+- **ShellBoxは「コンテナに入って作業する」ための仕組みではありません。**
+  - それをしたくなったら、それはShellBoxの出番ではなく、podman run -it や docker exec の出番です。
+  - ShellBoxは「単一目的の処理ユニット」を安全に繰り返すための仕組みです。
+
 ---
 
 ## ⚠️ WSL（Windows Subsystem for Linux）では使用できません
@@ -264,9 +269,17 @@ ShellBoxは、以下の環境での使用を想定・推奨しています：
 
 ---
 
+## 今後盛り込みたい機能
+
+- socatによるコンテナからホストOSへののシリアルポートプロキシ、またその他のプロキシ機能
+- マルチステージビルドでstaticなカスタムバイナリをビルド -> 設置・runを簡便にする仕組み
+
+---
+
 ## 最後に
 
 ShellBoxは、「ホスト環境を守る」というただ一点に特化した実行環境カプセルです。
 開発者の精神衛生を守るために、ぜひご活用ください。
 
 あと、なんか「こんな楽しい使い方あるよ！」とか「こんな使い方考えた！」とかあれば、ぜひプルリクください。
+でも、結構厳しく上記思想に照らしてレビューします。

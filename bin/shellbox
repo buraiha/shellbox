@@ -138,7 +138,7 @@ case "${1:-}" in
     init) init_shellbox ;;
     install)
         if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
-            echo "Usage: shellbox install <command_name> <entrypoint_cmd> [base_image] (optional)"
+            echo "Usage: shellbox install <sb_command_name> <entrypoint_cmd> [base_image] (optional)"
             echo "       Add -f or --force to skip entrypoint existence check"
             exit 1
         fi
