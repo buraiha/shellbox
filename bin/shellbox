@@ -163,7 +163,7 @@ case "${1:-}" in
     -r) remove_command "$2" ;;
     --path) show_paths ;;
     *)
-        echo "Usage: shellbox [init|install|uninstall|--version|-e <cmd>|-l|-r <cmd>|--path]"
+        echo "Usage: shellbox [init|install|uninstall|---edit-mounts <cmd>|-version|-e <cmd>|-l|-r <cmd>|--path]"
         exit 1
         ;;
 esac
