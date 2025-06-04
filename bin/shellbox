@@ -30,6 +30,8 @@ install_command() {
 
     local MOUNTS_TEMPLATE="$LIB_DIR/mounts_template.conf"
     local MOUNTS_CONF_PATH="$CMD_DIR/mounts.conf"
+    local DOCKERFILE_TEMPLATE="$LIB_DIR/dockerfile_template.Dockerfile"
+    local DOCKERFILE_PATH="$CMD_DIR/Dockerfile"
 
     echo "Installing command: $CMD_NAME"
     echo "Using base image: $IMAGE"
@@ -47,10 +49,14 @@ install_command() {
 
     mkdir -p "$CMD_DIR"
 
-    cat > "$CMD_DIR/Dockerfile" <<EOF
-FROM $IMAGE
-ENTRYPOINT ["$ENTRYPOINT_CMD"]
-EOF
+    if [[ ! -f "$DOCKERFILE_TEMPLATE" ]]; then
+        echo "❌ エラー: Dockerfile テンプレートが見つかりません: $DOCKERFILE_TEMPLATE"
+        return 1
+    fi
+
+    sed -e "s|{{IMAGE}}|$IMAGE|g" \
+        -e "s|{{ENTRYPOINT}}|$ENTRYPOINT_CMD|g" \
+        "$DOCKERFILE_TEMPLATE" > "$DOCKERFILE_PATH"
 
     podman build -t "$CMD_IMAGE" "$CMD_DIR"
 
@@ -64,7 +70,6 @@ EOF
         "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
 
-    # mounts.conf のテンプレートをコピー
     if [[ -f "$MOUNTS_TEMPLATE" ]]; then
         cp "$MOUNTS_TEMPLATE" "$MOUNTS_CONF_PATH"
         echo "🪵 mounts.conf を作成しました: $MOUNTS_CONF_PATH"
