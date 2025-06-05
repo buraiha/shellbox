@@ -18,6 +18,7 @@ init_shellbox() {
     echo "✅ ディレクトリ構成を初期化しました。"
 }
 
+# ShellBoxコマンドをインストールする
 install_command() {
     local CMD_NAME="$1"
     local ENTRYPOINT_CMD="$2"
@@ -49,6 +50,7 @@ install_command() {
 
     mkdir -p "$CMD_DIR"
 
+    # install Dockerfile and build-image
     if [[ ! -f "$DOCKERFILE_TEMPLATE" ]]; then
         echo "❌ エラー: Dockerfile テンプレートが見つかりません: $DOCKERFILE_TEMPLATE"
         return 1
@@ -60,6 +62,7 @@ install_command() {
 
     podman build -t "$CMD_IMAGE" "$CMD_DIR"
 
+    # install runsh-script
     if [[ ! -f "$TEMPLATE_PATH" ]]; then
         echo "❌ エラー: 実行スクリプトテンプレートが見つかりません: $TEMPLATE_PATH"
         return 1
@@ -70,6 +73,7 @@ install_command() {
         "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
 
+    # install mounts.conf
     if [[ -f "$MOUNTS_TEMPLATE" ]]; then
         cp "$MOUNTS_TEMPLATE" "$MOUNTS_CONF_PATH"
         echo "🪵 mounts.conf を作成しました: $MOUNTS_CONF_PATH"
@@ -80,6 +84,7 @@ install_command() {
     echo "✅ コマンド '$CMD_NAME' をインストールしました。"
 }
 
+# アンインストール
 uninstall_shellbox() {
     if [ -x "$UNINSTALL_SCRIPT" ]; then
         bash "$UNINSTALL_SCRIPT"
@@ -96,11 +101,13 @@ edit_command() {
     [[ -f "$TARGET" ]] && "${EDITOR:-vi}" "$TARGET" || echo "❌ $CMD は存在しません。"
 }
 
+# ShellBoxコマンド一覧表示
 list_commands() {
     echo "📦 ShellBoxコマンド一覧:"
     find "$BIN_DIR" -type f -exec basename {} \; | sort
 }
 
+# ShellBoxコマンド削除
 remove_command() {
     local CMD="$1"
     rm -f "$BIN_DIR/$CMD"
@@ -108,6 +115,7 @@ remove_command() {
     echo "🗑️ '$CMD' を削除しました。"
 }
 
+# ShellBoxパス表示
 show_paths() {
     echo "ShellBox構成パス:"
     echo "  BIN_DIR:         $BIN_DIR"
@@ -116,6 +124,7 @@ show_paths() {
     echo "  LIB_DIR:         $LIB_DIR"
 }
 
+# ShellBoxマウント設定編集
 edit_mounts() {
     local CMD_NAME="$1"
     local MOUNTS_PATH="$CONTAINERS_DIR/$CMD_NAME/mounts.conf"
