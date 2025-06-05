@@ -144,6 +144,45 @@ edit_mounts() {
     $EDITOR_CMD "$MOUNTS_PATH"
 }
 
+# ShellBoxコマンド再構築
+rebuild_command() {
+    local CMD_NAME="$1"
+    local FORCE="${2:-}"
+    local CMD_DIR="$CONTAINERS_DIR/$CMD_NAME"
+    local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
+    local CMD_IMAGE="shellbox_$CMD_NAME"
+
+    # Dockerfile存在チェック
+    if [[ ! -f "$CMD_DIR/Dockerfile" ]]; then
+        echo "❌ Dockerfile が見つかりません: $CMD_DIR/Dockerfile"
+        echo "   このコマンドは復元できません。"
+        return 1
+    fi
+
+    # 上書き確認
+    if [[ -f "$SCRIPT_PATH" && "$FORCE" != "--force" ]]; then
+        echo "⚠️ 既にコマンドスクリプトが存在しています: $SCRIPT_PATH"
+        echo "   上書きするには --force を付けてください。"
+        return 1
+    fi
+
+    echo "🔨 イメージを再ビルド中: $CMD_IMAGE"
+    podman build -t "$CMD_IMAGE" "$CMD_DIR"
+
+    if [[ ! -f "$TEMPLATE_PATH" ]]; then
+        echo "❌ 実行スクリプトテンプレートが見つかりません: $TEMPLATE_PATH"
+        return 1
+    fi
+
+    echo "📄 ShellBoxスクリプトを再生成中: $SCRIPT_PATH"
+    sed -e "s|{{CMD_IMAGE}}|$CMD_IMAGE|g" \
+        -e "s|{{CMD_NAME}}|$CMD_NAME|g" \
+        "$TEMPLATE_PATH" > "$SCRIPT_PATH"
+    chmod +x "$SCRIPT_PATH"
+
+    echo "✅ コマンド '$CMD_NAME' を復元しました。"
+}
+
 # メイン処理
 case "${1:-}" in
     --version)
@@ -171,13 +210,22 @@ case "${1:-}" in
         shift
         edit_mounts "$@"
         ;;
+    rebuild)
+        if [[ -z "${2:-}" ]]; then
+            echo "Usage: shellbox rebuild <sb_command_name> [--force]"
+            exit 1
+        fi
+        CMD_NAME="$2"
+        FORCE_FLAG="${3:-}"
+        rebuild_command "$CMD_NAME" "$FORCE_FLAG"
+        ;;
     uninstall) uninstall_shellbox ;;
     -e) edit_command "$2" ;;
     -l) list_commands ;;
     -r) remove_command "$2" ;;
     --path) show_paths ;;
     *)
-        echo "Usage: shellbox [init|install|uninstall|---edit-mounts <cmd>|-version|-e <cmd>|-l|-r <cmd>|--path]"
+        echo "Usage: shellbox [ init | install | uninstall | rebuild |---edit-mounts <cmd> | -version | -e <cmd> | -l | -r <cmd> | --path ]"
         exit 1
         ;;
 esac
