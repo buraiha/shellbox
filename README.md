@@ -120,16 +120,18 @@ curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/install.sh
 
 `shellbox` は、ShellBox環境全体を管理するためのCLIツールです。以下のような機能を提供しています。
 
-| コマンド                                                 | 説明                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------- |
-| `shellbox init`                                      | ShellBoxの基本ディレクトリ構成を初期化します（`bin`, `log`, `containers` などを作成）。 |
-| `shellbox install \<name\> \<entrypoint\> [image] [-f \| --force]`                                                    | 指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します。<br> `image` を省略した場合は `gcr.io/distroless/base-debian12:debug-nonroot` が使用されます。<br> `--force` を指定すると ENTRYPOINT 存在チェックをスキップします。 <br>※デフォルトのコンテナイメージはdistrolessを使っており、lsやcutなどのコマンドはbusyboxに含まれるため、ENTRYPOINT存在チェックで存在を検知できません。そういったコマンドを使用するときには`--force`してください。|
-| `shellbox uninstall`                                 | ShellBox本体を削除するためのスクリプト（`lib/uninstall.sh`）を呼び出します。           |
-| `shellbox -e <name>`                                 | 指定したShellBoxスクリプトを `$EDITOR` または `vi` で開きます。                  |
-| `shellbox -l`                                        | インストール済みのShellBoxコマンド一覧を表示します。                                |
-| `shellbox -r <name>`                                 | 指定したコマンドに関連するスクリプトとDockerfileを削除します。                          |
-| `shellbox --path`                                    | ShellBoxが使用している構成ディレクトリのパスを一覧表示します。                           |
-| `shellbox --version`                                 | ShellBoxのバージョン（`/usr/local/shellbox/VERSION`）を表示します。          |
+| コマンド | 説明 | 使用例 | 備考 |
+|---------|------|----------|------|
+| `shellbox init` | ShellBoxの基本ディレクトリ構成を初期化します（`bin`, `log`, `containers`, `lib` などを作成） | `shellbox init` | 初回セットアップ時に実行 |
+| `shellbox install <name> <entrypoint> [image] [-f\|--force]` | 指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
+| `shellbox rebuild <name> [--force]` | 指定したShellBoxコマンドのイメージとスクリプトを再生成します | `shellbox rebuild sb-ls` | `--force` をつけると既存の実行スクリプトを強制上書き |
+| `shellbox uninstall` | ShellBox本体をアンインストールします（lib/uninstall.sh を呼び出し） | `shellbox uninstall` | ディレクトリ構成ごと削除されます |
+| `shellbox -e <name>` | ShellBoxスクリプトを `$EDITOR` または `vi` で編集します | `shellbox -e sb-ls` | `$EDITOR` 未設定時は `vi` 使用 |
+| `shellbox -l` | インストール済みのShellBoxコマンド一覧を表示します | `shellbox -l` | `/usr/local/shellbox/bin` 配下のファイル名一覧 |
+| `shellbox -r <name>` | 指定したShellBoxコマンドを削除します（スクリプト+コンテナ定義） | `shellbox -r sb-ls` | `/bin` と `/containers` 両方を削除 |
+| `shellbox --path` | ShellBoxが使用するディレクトリ構成を表示します | `shellbox --path` | 各種ディレクトリの絶対パス表示 |
+| `shellbox --version` | ShellBoxのバージョンを表示します | `shellbox --version` | `/usr/local/shellbox/VERSION` の中身 |
+| `shellbox edit-mounts <name>` | 指定したShellBoxコマンド用のマウント設定（`mounts.conf`）を編集します | `shellbox edit-mounts sb-ls` | テンプレートがあれば初回作成も自動で実施 |
 
 ---
 
