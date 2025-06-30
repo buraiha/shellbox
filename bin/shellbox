@@ -84,15 +84,53 @@ install_command() {
     echo "✅ コマンド '$CMD_NAME' をインストールしました。"
 }
 
-# アンインストール
+# ShellBoxコマンドのアンインストール
 uninstall_shellbox() {
-    if [ -x "$UNINSTALL_SCRIPT" ]; then
-        bash "$UNINSTALL_SCRIPT"
-    else
-        echo "⚠ uninstall.sh が見つかりません: $UNINSTALL_SCRIPT"
-        echo "手動で $SHELLBOX_HOME を削除してください。"
+    local CMD_NAME="${2:-}"
+
+    if [[ -z "$CMD_NAME" ]]; then
+        echo "Usage: shellbox uninstall <sb_command_name>"
+        return 1
     fi
+
+    local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
+    local CMD_DIR="$CONTAINERS_DIR/$CMD_NAME"
+    local CMD_IMAGE="shellbox_$CMD_NAME"
+
+    # 削除確認
+    read -p "🗑️ ShellBoxコマンド '$CMD_NAME' を削除しますか？ [y/N]: " confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        echo "キャンセルしました。"
+        return 0
+    fi
+
+    # スクリプト削除
+    if [[ -f "$SCRIPT_PATH" ]]; then
+        rm -f "$SCRIPT_PATH"
+        echo "🧽 スクリプトを削除: $SCRIPT_PATH"
+    else
+        echo "⚠️ スクリプトが見つかりません: $SCRIPT_PATH"
+    fi
+
+    # コンテナ定義削除
+    if [[ -d "$CMD_DIR" ]]; then
+        rm -rf "$CMD_DIR"
+        echo "📦 コンテナディレクトリを削除: $CMD_DIR"
+    else
+        echo "⚠️ コンテナディレクトリが見つかりません: $CMD_DIR"
+    fi
+
+    # イメージ削除（存在していれば）
+    if podman image exists "$CMD_IMAGE"; then
+        podman rmi -f "$CMD_IMAGE"
+        echo "🧼 イメージを削除: $CMD_IMAGE"
+    else
+        echo "ℹ️ イメージは存在しません: $CMD_IMAGE"
+    fi
+
+    echo "✅ コマンド '$CMD_NAME' のアンインストールが完了しました。"
 }
+
 
 # ユーティリティ機能群
 edit_command() {

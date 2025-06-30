@@ -138,9 +138,9 @@ curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/install.sh
 | コマンド | 説明 | 使用例 | 備考 |
 |---------|------|----------|------|
 | `shellbox init` | ShellBoxの基本ディレクトリ構成を初期化します（`bin`, `log`, `containers`, `lib` などを作成） | `shellbox init` | 初回セットアップ時に実行 |
-| `shellbox install <name> <entrypoint> [image] [-f\|--force]` | 指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
+| `shellbox install <name> <entrypoint> [image] [-f\|--force]` | ShellBoxコマンドをインストールします。指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
 | `shellbox rebuild <name> [--force]` | 指定したShellBoxコマンドのイメージとスクリプトを再生成します | `shellbox rebuild sb-ls` | `--force` をつけると既存の実行スクリプトを強制上書き |
-| `shellbox uninstall` | ShellBox本体をアンインストールします（lib/uninstall.sh を呼び出し） | `shellbox uninstall` | ディレクトリ構成ごと削除されます |
+| `shellbox uninstall` | ShellBoxコマンドをアンインストールします | `shellbox uninstall` | コマンドに付随するDockerfileとrunスクリプト、コンテナイメージが削除されます |
 | `shellbox -e <name>` | ShellBoxスクリプトを `$EDITOR` または `vi` で編集します | `shellbox -e sb-ls` | `$EDITOR` 未設定時は `vi` 使用 |
 | `shellbox -l` | インストール済みのShellBoxコマンド一覧を表示します | `shellbox -l` | `/usr/local/shellbox/bin` 配下のファイル名一覧 |
 | `shellbox -r <name>` | 指定したShellBoxコマンドを削除します（スクリプト+コンテナ定義） | `shellbox -r sb-ls` | `/bin` と `/containers` 両方を削除 |
