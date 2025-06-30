@@ -14,15 +14,6 @@ DOCKERFILE_TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main
 VERSION_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/VERSION"
 VERSION="$(curl -sSL "$VERSION_URL")"
 
-# wslにはインストールできません
-# 詳細はREADME.mdを参照ください。https://github.com/buraiha/shellbox
-if grep -qiE "microsoft|wsl" /proc/version 2>/dev/null; then
-  echo "❌ この環境はWSLと判定されました。ShellBoxはWSLでは使用できません。"
-  echo "🛑 ShellBoxはすでに仮想環境上であるWSLにインストールする必要はありません。"
-  echo "    詳細はREADME.mdを参照してください: https://github.com/buraiha/shellbox"
-  exit 1
-fi
-
 # --force 対応
 if [[ "${1:-}" == "--force" ]]; then
     echo "🧨 --force 指定あり。ShellBox を強制削除してから再インストールします。"
