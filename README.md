@@ -22,11 +22,9 @@
 
 macOSで開発する際、HomebrewやMacPortsなどでツールをインストールすることが多いですが、過去に環境を壊してしまった経験から、現在は環境保全を最優先に考えています。
 
-先日もazure cliをmacportsで入れようとしたら、macportsにazule cliは存在はするけどまともに動かなくて、やむなくbrewも入れる、、、という羽目になりました。portsもbrewも共存できるので問題はないのですが、やっぱり気持ち悪いのです。わかりますかねこの気持ち。
+先日もazure cliをmacportsで入れようとしたら、macportsにazure cliは存在はするけどまともに動かなくて、やむなくbrewも入れる、、、という羽目になりました。portsもbrewも共存できるので問題はないのですが、やっぱり気持ち悪いのです。わかりますかねこの気持ち。
 
 dockerやpodmanを使うと、ホストOSの環境を汚さずにコマンドを実行できるので、非常に精神衛生上よろしいです。
-
----
 
 ## ShellBoxの仕組み
 
@@ -61,7 +59,7 @@ ShellBoxは「ワンコマンドで実行できる環境の起動装置」であ
 
 podmanをおすすめします。Dockerでもよいですが、podmanのほうが好きだからです。ロゴにもpodmanのセルキーが入っている手前もありますし。
 
-podmanのほうがrootlessで動かせるので、セキュリティ的にも安心です(今日びのDockerでもできますけどね)。とくにこの仕組みのは細かいツールをたくさんコンテナ化する形になるので、変なことをしてrm -rf なんぞをしてしまっても安心。
+podmanのほうがrootlessで動かせるので、セキュリティ的にも安心です(今日びのDockerでもできますけどね)。とくにこの仕組のは細かいツールをたくさんコンテナ化する形になるので、変なことをしてrm -rf なんぞをしてしまっても安心。
 
 あ、でも、Dockerで動いていたものをpodmanのrootlessで動かそうと思うと思いのほか面倒なことが多いので、覚悟してください。
 
@@ -149,9 +147,9 @@ curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/teardown.s
 | コマンド | 説明 | 使用例 | 備考 |
 |---------|------|----------|------|
 | `shellbox init` | ShellBoxの基本ディレクトリ構成を初期化します（`bin`, `log`, `containers`, `lib` などを作成） | `shellbox init` | 初回セットアップ時に実行 |
-| `shellbox install <name> <entrypoint> [image] [-f\|--force]` | 指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
+| `shellbox install <name> <entrypoint> [image] [-f\|--force]` | ShellBoxコマンドをインストールします。指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
 | `shellbox rebuild <name> [--force]` | 指定したShellBoxコマンドのイメージとスクリプトを再生成します | `shellbox rebuild sb-ls` | `--force` をつけると既存の実行スクリプトを強制上書き |
-| `shellbox uninstall` | ShellBox本体をアンインストールします（lib/uninstall.sh を呼び出し） | `shellbox uninstall` | ディレクトリ構成ごと削除されます |
+| `shellbox uninstall` | ShellBoxコマンドをアンインストールします | `shellbox uninstall` | コマンドに付随するDockerfileとrunスクリプト、コンテナイメージが削除されます |
 | `shellbox -e <name>` | ShellBoxスクリプトを `$EDITOR` または `vi` で編集します | `shellbox -e sb-ls` | `$EDITOR` 未設定時は `vi` 使用 |
 | `shellbox -l` | インストール済みのShellBoxコマンド一覧を表示します | `shellbox -l` | `/usr/local/shellbox/bin` 配下のファイル名一覧 |
 | `shellbox -r <name>` | 指定したShellBoxコマンドを削除します（スクリプト+コンテナ定義） | `shellbox -r sb-ls` | `/bin` と `/containers` 両方を削除 |
@@ -249,7 +247,7 @@ fi
 
 ---
 
-### 📌 運用ルールの提案
+## 📌 運用ルールの提案
 
 - 一般的なコマンド（`ls`, `python`, `grep` など）は、そのままのShellBoxスクリプトで `$@` を透過させるだけで動作します。
 - 特殊な入出力要件がある場合は、各ShellBoxスクリプトやコンテナイメージ（DockerfileやENTRYPOINT）で柔軟に対応してください。
@@ -259,43 +257,17 @@ fi
   - それをしたくなったら、それはShellBoxの出番ではなく、podman run -it や docker exec の出番です。
   - ShellBoxは「単一目的の処理ユニット」を安全に繰り返すための仕組みです。
 
----
+### ❗ 問題発生時、sudoによる回避は「本末転倒」です、、、けどもね
 
-## ⚠️ WSL（Windows Subsystem for Linux）では使用できません
-
-ShellBoxは、「ホストOSを汚さず、安全にコマンドを発行すること」を目的とした  
-**ホスト保護型のコンテナ実行フレームワーク**です。
-
-一方、WSL（Windows Subsystem for Linux）は、すでに仮想環境上で動作するLinux層であり、  
-その時点で「ホストOS（Windows）」とは隔離された空間となっています。
-
-そのため、ShellBoxが目指す「ホストOSへの影響最小化」という思想とは根本的に矛盾します。
-
-### ❌ WSLでの使用による既知の問題
-
-- `/mnt` 以下のファイルがコンテナからアクセスできない（`Permission denied`）
-- NTFSを `drvfs` 経由でマウントしているため、UID/GIDや実行権限が正しく伝わらない
-- `ENTRYPOINT ["sh"]` で `/mnt` を渡すと `can't open` エラーになる
-- rootless Podmanからファイルの読み取りすら失敗することがある
-
-### ❗ sudoによる回避は「本末転倒」です
-
-WSLでは `sudo podman run` によって一時的に問題を回避できるように見える場合があります。  
+rootlessで動いているために、様々な問題が発生する場合があります。それらは、 `sudo podman run` によって一時的に問題を回避できるように見える場合があります。  
 しかし、**ShellBoxの目的は「ホストOSの保護」であり、sudoによるroot権限実行はその理念に反します。**
 
-- コンテナからホストファイルを誤って削除・上書きできる可能性がある
-- WSLがすでに仮想空間である以上、ShellBoxで隔離しても意味がない
-- ShellBoxは **rootlessかつホスト本体上での使用を前提**としています
+・・・だけど、一応、ShellBoxコマンドインストール時に--root オプションを付与して、root権限で実行させることは可能です。
 
-### ✅ 結論：WSLはShellBoxの対象外です
+## 【補足】wsl での利用について
 
-ShellBoxは、以下の環境での使用を想定・推奨しています：
-
-- macOS（特にPodman + podman machineとの併用）
-- ネイティブLinux（Debian, Ubuntu, Arch, Fedoraなど）
-  - (とはいえ、2025-06-03時点でまだLinuxでの動作確認はしていません)
-
----
+以前は動作保証が難しいため非サポート(何かしようとして、失敗して「wslはアカンな」と作者が勘違いした可脳性が高いですが、現行の WSL2環境では十分に安定して動作するため、現在は制限していません。  
+ただし、特殊なマウント構成やTTY関連では制限がある可能性があります。ご自身の責任でお試しください。
 
 ## 今後盛り込みたい機能
 

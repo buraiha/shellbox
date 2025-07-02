@@ -7,21 +7,12 @@ LIB_DIR="$SHELLBOX_HOME/lib"
 SCRIPT_PATH="$BIN_DIR/shellbox"
 
 SCRIPT_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/bin/shellbox"
-UNINSTALL_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/uninstall.sh"
+TEARDOWN_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/teardown.sh"
 TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/runsh_template.sh"
 MOUNTS_TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/mounts_template.conf"
 DOCKERFILE_TEMPLATE_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/lib/dockerfile_template.Dockerfile"
 VERSION_URL="https://raw.githubusercontent.com/buraiha/shellbox/main/VERSION"
 VERSION="$(curl -sSL "$VERSION_URL")"
-
-# wslにはインストールできません
-# 詳細はREADME.mdを参照ください。https://github.com/buraiha/shellbox
-if grep -qiE "microsoft|wsl" /proc/version 2>/dev/null; then
-  echo "❌ この環境はWSLと判定されました。ShellBoxはWSLでは使用できません。"
-  echo "🛑 ShellBoxはすでに仮想環境上であるWSLにインストールする必要はありません。"
-  echo "    詳細はREADME.mdを参照してください: https://github.com/buraiha/shellbox"
-  exit 1
-fi
 
 # --force 対応
 if [[ "${1:-}" == "--force" ]]; then
@@ -46,8 +37,8 @@ sudo chown -R "$(whoami)" "$SHELLBOX_HOME"
 curl -sSL "$SCRIPT_URL" -o "$SCRIPT_PATH"
 chmod +x "$SCRIPT_PATH"
 
-curl -sSL "$UNINSTALL_URL" -o "$LIB_DIR/uninstall.sh"
-chmod +x "$LIB_DIR/uninstall.sh"
+curl -sSL "$TEARDOWN_URL" -o "$LIB_DIR/teardown.sh"
+chmod +x "$LIB_DIR/teardown.sh"
 
 curl -sSL "$TEMPLATE_URL" -o "$LIB_DIR/runsh_template.sh"
 chmod +x "$LIB_DIR/runsh_template.sh"
