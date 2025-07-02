@@ -41,7 +41,7 @@ install_command() {
     if [[ "$FORCE" != "force" ]]; then
         if ! podman run --rm "$IMAGE" sh -c "command -v $ENTRYPOINT_CMD" > /dev/null 2>&1; then
             echo "❌ エラー: イメージ '$IMAGE' にコマンド '$ENTRYPOINT_CMD' が存在しません。"
-            echo "💡 busyboxなどで明示的に続行するには: shellbox install ... --force"
+            echo "💡 ENTRYPOINTが見つからなくてもインストールを続行したい場合は: shellbox install ... --force"
             return 1
         fi
     else
