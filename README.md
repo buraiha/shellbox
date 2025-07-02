@@ -124,14 +124,23 @@ podman run --rm -v "$PWD":/mnt shellbox_python /mnt/test_script.py
 以下のコマンドでShellBoxをインストールします。
 
 ```sh
-curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/setup.sh | bash
 ```
 
 再インストールしたい場合：
 
 ```sh
-curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/install.sh | bash -s -- --force
+curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/setup.sh | bash -s -- --force
 ```
+
+### アンインストール
+
+ShellBoxをアンインストールする場合は、以下のコマンドを実行します。
+
+```sh
+curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/teardown.sh | bash 
+```
+
 
 ## 🧪 ShellBoxコマンドの基本機能
 
