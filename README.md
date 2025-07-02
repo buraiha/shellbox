@@ -139,7 +139,6 @@ ShellBoxをアンインストールする場合は、以下のコマンドを実
 curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/teardown.sh | bash 
 ```
 
-
 ## 🧪 ShellBoxコマンドの基本機能
 
 `shellbox` は、ShellBox環境全体を管理するためのCLIツールです。以下のような機能を提供しています。
