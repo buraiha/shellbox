@@ -7,6 +7,13 @@ CMD_IMAGE="shellbox_{{CMD_NAME}}"
 EXTRA_MOUNTS_FILE="/usr/local/shellbox/containers/{{CMD_NAME}}/mounts.conf"
 EXTRA_MOUNTS=()
 
+# ROOTモードコマンドの判定
+ROOT_FLAG_PATH="/usr/local/shellbox/containers/{{CMD_NAME}}/as-root.flag"
+USE_SUDO=""
+if [[ -f "$ROOT_FLAG_PATH" ]]; then
+    USE_SUDO="sudo"
+fi
+
 if [[ -f "$EXTRA_MOUNTS_FILE" ]]; then
     while IFS= read -r line; do
         [[ -z "$line" || "$line" == \#* ]] && continue
