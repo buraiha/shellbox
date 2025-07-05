@@ -24,10 +24,20 @@ install_command() {
     local ENTRYPOINT_CMD="$2"
     local IMAGE="$3"
     local FORCE="${4:-}"
+    local ROOT_MODE="${5:-}"
 
     local CMD_DIR="$CONTAINERS_DIR/$CMD_NAME"
     local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
     local CMD_IMAGE="shellbox_$CMD_NAME"
+    local ROOT_FLAG_PATH="$CMD_DIR/as-root.flag"
+    local USE_SUDO=""
+
+    if [[ "$ROOT_MODE" == "--root" ]]; then
+        USE_SUDO="sudo"
+        echo "🔐 root実行モードでビルドされます (--root)"
+        touch "$ROOT_FLAG_PATH"
+        echo "🛡️ root実行用フラグを作成しました: $ROOT_FLAG_PATH"
+    fi
 
     local MOUNTS_TEMPLATE="$LIB_DIR/mounts_template.conf"
     local MOUNTS_CONF_PATH="$CMD_DIR/mounts.conf"
@@ -50,30 +60,20 @@ install_command() {
 
     mkdir -p "$CMD_DIR"
 
-    # install Dockerfile and build-image
-    if [[ ! -f "$DOCKERFILE_TEMPLATE" ]]; then
-        echo "❌ エラー: Dockerfile テンプレートが見つかりません: $DOCKERFILE_TEMPLATE"
-        return 1
-    fi
-
+    # Dockerfile 生成
     sed -e "s|{{IMAGE}}|$IMAGE|g" \
         -e "s|{{ENTRYPOINT}}|$ENTRYPOINT_CMD|g" \
         "$DOCKERFILE_TEMPLATE" > "$DOCKERFILE_PATH"
 
-    podman build -t "$CMD_IMAGE" "$CMD_DIR"
+    $USE_SUDO podman build -t "$CMD_IMAGE" "$CMD_DIR"
 
-    # install runsh-script
-    if [[ ! -f "$TEMPLATE_PATH" ]]; then
-        echo "❌ エラー: 実行スクリプトテンプレートが見つかりません: $TEMPLATE_PATH"
-        return 1
-    fi
-
+    # runスクリプト生成
     sed -e "s|{{CMD_IMAGE}}|$CMD_IMAGE|g" \
         -e "s|{{CMD_NAME}}|$CMD_NAME|g" \
         "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
 
-    # install mounts.conf
+    # mounts.conf
     if [[ -f "$MOUNTS_TEMPLATE" ]]; then
         cp "$MOUNTS_TEMPLATE" "$MOUNTS_CONF_PATH"
         echo "🪵 mounts.conf を作成しました: $MOUNTS_CONF_PATH"
@@ -189,11 +189,18 @@ rebuild_command() {
     local CMD_DIR="$CONTAINERS_DIR/$CMD_NAME"
     local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
     local CMD_IMAGE="shellbox_$CMD_NAME"
+    local ROOT_FLAG_PATH="$CMD_DIR/as-root.flag"
+    local USE_SUDO=""
+
+    if [[ -f "$ROOT_FLAG_PATH" ]]; then
+        USE_SUDO="sudo"
+        echo "🔐 rootモードで再ビルドされます"
+    fi
 
     # Dockerfile存在チェック
     if [[ ! -f "$CMD_DIR/Dockerfile" ]]; then
         echo "❌ Dockerfile が見つかりません: $CMD_DIR/Dockerfile"
-        echo "   このコマンドは復元できません。"
+        echo "   このコマンドは再ビルドできません。"
         return 1
     fi
 
@@ -205,7 +212,7 @@ rebuild_command() {
     fi
 
     echo "🔨 イメージを再ビルド中: $CMD_IMAGE"
-    podman build -t "$CMD_IMAGE" "$CMD_DIR"
+    $USE_SUDO podman build -t "$CMD_IMAGE" "$CMD_DIR"
 
     if [[ ! -f "$TEMPLATE_PATH" ]]; then
         echo "❌ 実行スクリプトテンプレートが見つかりません: $TEMPLATE_PATH"
@@ -218,7 +225,7 @@ rebuild_command() {
         "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
 
-    echo "✅ コマンド '$CMD_NAME' を復元しました。"
+    echo "✅ コマンド '$CMD_NAME' を再ビルドしました。"
 }
 
 # メイン処理
@@ -229,20 +236,25 @@ case "${1:-}" in
     init) init_shellbox ;;
     install)
         if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
-            echo "Usage: shellbox install <sb_command_name> <entrypoint_cmd> [base_image] (optional)"
-            echo "       Add -f or --force to skip entrypoint existence check"
+            echo "Usage: shellbox install <sb_command_name> <entrypoint_cmd> [base_image] [--force] [--root]"
             exit 1
         fi
+
+        CMD_NAME="$2"
+        ENTRYPOINT="$3"
+        IMAGE="$DEFAULT_IMAGE"
         FORCE_FLAG=""
-        if [[ "${4:-}" == "-f" || "${4:-}" == "--force" ]]; then
-            FORCE_FLAG="force"
-            install_command "$2" "$3" "$DEFAULT_IMAGE" "$FORCE_FLAG"
-        elif [[ "${5:-}" == "-f" || "${5:-}" == "--force" ]]; then
-            FORCE_FLAG="force"
-            install_command "$2" "$3" "$4" "$FORCE_FLAG"
-        else
-            install_command "$2" "$3" "${4:-$DEFAULT_IMAGE}" "$FORCE_FLAG"
-        fi
+        ROOT_FLAG=""
+
+        for arg in "${@:4}"; do
+            case "$arg" in
+                -f|--force) FORCE_FLAG="force" ;;
+                --root) ROOT_FLAG="--root" ;;
+                *) IMAGE="$arg" ;;
+            esac
+        done
+
+        install_command "$CMD_NAME" "$ENTRYPOINT" "$IMAGE" "$FORCE_FLAG" "$ROOT_FLAG"
         ;;
     edit-mounts)
         shift
