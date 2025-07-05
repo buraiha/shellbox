@@ -21,7 +21,7 @@ if [[ -f "$EXTRA_MOUNTS_FILE" ]]; then
     done < "$EXTRA_MOUNTS_FILE"
 fi
 
-podman run --rm \
+$USE_SUDO podman run --rm \
     -v "$PWD":/mnt \
     -w /mnt \
     ${EXTRA_MOUNTS+"${EXTRA_MOUNTS[@]}"} \
