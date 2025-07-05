@@ -32,12 +32,6 @@ install_command() {
     local ROOT_FLAG_PATH="$CMD_DIR/as-root.flag"
     local USE_SUDO=""
 
-    if [[ "$ROOT_MODE" == "--root" ]]; then
-        USE_SUDO="sudo"
-        echo "🔐 root実行モードでビルドされます (--root)"
-        touch "$ROOT_FLAG_PATH"
-        echo "🛡️ root実行用フラグを作成しました: $ROOT_FLAG_PATH"
-    fi
 
     local MOUNTS_TEMPLATE="$LIB_DIR/mounts_template.conf"
     local MOUNTS_CONF_PATH="$CMD_DIR/mounts.conf"
@@ -59,6 +53,14 @@ install_command() {
     fi
 
     mkdir -p "$CMD_DIR"
+
+    # rootモードフラグ作成
+    if [[ "$ROOT_MODE" == "--root" ]]; then
+        USE_SUDO="sudo"
+        echo "🔐 root実行モードでビルドされます (--root)"
+        touch "$ROOT_FLAG_PATH"
+        echo "🛡️ root実行用フラグを作成しました: $ROOT_FLAG_PATH"
+    fi
 
     # Dockerfile 生成
     sed -e "s|{{IMAGE}}|$IMAGE|g" \
