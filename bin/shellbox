@@ -189,11 +189,18 @@ rebuild_command() {
     local CMD_DIR="$CONTAINERS_DIR/$CMD_NAME"
     local SCRIPT_PATH="$BIN_DIR/$CMD_NAME"
     local CMD_IMAGE="shellbox_$CMD_NAME"
+    local ROOT_FLAG_PATH="$CMD_DIR/as-root.flag"
+    local USE_SUDO=""
+
+    if [[ -f "$ROOT_FLAG_PATH" ]]; then
+        USE_SUDO="sudo"
+        echo "🔐 rootモードで再ビルドされます"
+    fi
 
     # Dockerfile存在チェック
     if [[ ! -f "$CMD_DIR/Dockerfile" ]]; then
         echo "❌ Dockerfile が見つかりません: $CMD_DIR/Dockerfile"
-        echo "   このコマンドは復元できません。"
+        echo "   このコマンドは再ビルドできません。"
         return 1
     fi
 
@@ -205,7 +212,7 @@ rebuild_command() {
     fi
 
     echo "🔨 イメージを再ビルド中: $CMD_IMAGE"
-    podman build -t "$CMD_IMAGE" "$CMD_DIR"
+    $USE_SUDO podman build -t "$CMD_IMAGE" "$CMD_DIR"
 
     if [[ ! -f "$TEMPLATE_PATH" ]]; then
         echo "❌ 実行スクリプトテンプレートが見つかりません: $TEMPLATE_PATH"
@@ -218,7 +225,7 @@ rebuild_command() {
         "$TEMPLATE_PATH" > "$SCRIPT_PATH"
     chmod +x "$SCRIPT_PATH"
 
-    echo "✅ コマンド '$CMD_NAME' を復元しました。"
+    echo "✅ コマンド '$CMD_NAME' を再ビルドしました。"
 }
 
 # メイン処理

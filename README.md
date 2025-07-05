@@ -146,7 +146,7 @@ curl -sSL https://raw.githubusercontent.com/buraiha/shellbox/main/lib/teardown.s
 | コマンド | 説明 | 使用例 | 備考 |
 |---------|------|----------|------|
 | `shellbox init` | ShellBoxの基本ディレクトリ構成を初期化します（`bin`, `log`, `containers`, `lib` などを作成） | `shellbox init` | 初回セットアップ時に実行 |
-| `shellbox install <name> <entrypoint> [image] [--force] [--root]` | ShellBoxコマンドをインストールします。指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
+| `shellbox install <name> <entrypoint> [image] [-f | --force] [--root]` | ShellBoxコマンドをインストールします。指定された ENTRYPOINT とイメージでコマンドをShellBox化し、スクリプトを `/usr/local/shellbox/bin/<name>` に生成します | `shellbox install sb-ls ls` | `image` を省略すると `distroless` ベースになります。busybox等の場合は `--force` 必須 |
 | `shellbox rebuild <name> [--force]` | 指定したShellBoxコマンドのイメージとスクリプトを再生成します | `shellbox rebuild sb-ls` | `--force` をつけると既存の実行スクリプトを強制上書き |
 | `shellbox uninstall` | ShellBoxコマンドをアンインストールします | `shellbox uninstall` | コマンドに付随するDockerfileとrunスクリプト、コンテナイメージが削除されます |
 | `shellbox -e <name>` | ShellBoxスクリプトを `$EDITOR` または `vi` で編集します | `shellbox -e sb-ls` | `$EDITOR` 未設定時は `vi` 使用 |
@@ -264,7 +264,6 @@ rootlessで動いているために、様々な問題が発生する場合があ
 ・・・だけど、一応、ShellBoxコマンドインストール時に--root オプションを付与して、root権限で実行させることは可能です。
 
 例えば、let's encryptの証明書を更新する`certbot`コマンドは、sudo権限で実行する必要があります。その場合は、certbotコマンドをインストールする際に `--root` オプションを付けてください。
-
 
 ## 【補足】wsl での利用について
 
